@@ -22,6 +22,7 @@ drivers/net/ethernet/qualcomm/*
 drivers/net/ethernet/wiznet/*
 drivers/net/ieee802154/*
 drivers/net/usb/*
+drivers/net/veth*
 drivers/net/wireguard/*
 drivers/net/wireless/broadcom/*
 drivers/nvme/*
