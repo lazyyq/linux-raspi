@@ -438,7 +438,7 @@ static int rpi_firmware_remove(struct platform_device *pdev)
  */
 struct rpi_firmware *rpi_firmware_get(struct device_node *firmware_node)
 {
-	struct platform_device *pdev = g_pdev;
+	struct platform_device *pdev = of_find_device_by_node(firmware_node);
 	struct rpi_firmware *fw;
 
 	if (!pdev)
