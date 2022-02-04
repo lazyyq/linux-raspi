@@ -478,7 +478,7 @@ out:
 }
 
 #ifdef CONFIG_NTFS3_FS_POSIX_ACL
-static struct posix_acl *ntfs_get_acl_ex(
+static struct posix_acl *ntfs_get_acl_ex(struct user_namespace *mnt_userns,
 					 struct inode *inode, int type,
 					 int locked)
 {
@@ -514,7 +514,7 @@ static struct posix_acl *ntfs_get_acl_ex(
 
 	/* Translate extended attribute to acl. */
 	if (err >= 0) {
-		acl = posix_acl_from_xattr(&init_user_ns, buf, err);
+		acl = posix_acl_from_xattr(mnt_userns, buf, err);
 	} else if (err == -ENODATA) {
 		acl = NULL;
 	} else {
@@ -535,10 +535,10 @@ static struct posix_acl *ntfs_get_acl_ex(
 struct posix_acl *ntfs_get_acl(struct inode *inode, int type)
 {
 	/* TODO: init_user_ns? */
-	return ntfs_get_acl_ex(inode, type, 0);
+	return ntfs_get_acl_ex(&init_user_ns, inode, type, 0);
 }
 
-static noinline int ntfs_set_acl_ex(
+static noinline int ntfs_set_acl_ex(struct user_namespace *mnt_userns,
 				    struct inode *inode, struct posix_acl *acl,
 				    int type, bool init_acl)
 {
@@ -557,7 +557,7 @@ static noinline int ntfs_set_acl_ex(
 		if (acl && !init_acl) {
 			umode_t mode;
 
-			err = posix_acl_update_mode(inode, &mode,
+			err = posix_acl_update_mode(mnt_userns, inode, &mode,
 						    &acl);
 			if (err)
 				goto out;
@@ -592,7 +592,7 @@ static noinline int ntfs_set_acl_ex(
 		value = kmalloc(size, GFP_NOFS);
 		if (!value)
 			return -ENOMEM;
-		err = posix_acl_to_xattr(&init_user_ns, acl, value, size);
+		err = posix_acl_to_xattr(mnt_userns, acl, value, size);
 		if (err < 0)
 			goto out;
 		flags = 0;
@@ -613,13 +613,13 @@ out:
 /*
  * ntfs_set_acl - inode_operations::set_acl
  */
-int ntfs_set_acl(struct inode *inode,
+int ntfs_set_acl(struct user_namespace *mnt_userns, struct inode *inode,
 		 struct posix_acl *acl, int type)
 {
-	return ntfs_set_acl_ex(inode, acl, type, false);
+	return ntfs_set_acl_ex(mnt_userns, inode, acl, type, false);
 }
 
-static int ntfs_xattr_get_acl(
+static int ntfs_xattr_get_acl(struct user_namespace *mnt_userns,
 			      struct inode *inode, int type, void *buffer,
 			      size_t size)
 {
@@ -638,7 +638,7 @@ static int ntfs_xattr_get_acl(
 	if (!acl)
 		return -ENODATA;
 
-	err = posix_acl_to_xattr(&init_user_ns, acl, buffer, size);
+	err = posix_acl_to_xattr(mnt_userns, acl, buffer, size);
 	posix_acl_release(acl);
 
 	return err;
