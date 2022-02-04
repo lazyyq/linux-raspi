@@ -1034,10 +1034,10 @@ static ssize_t ntfs_compress_write(struct kiocb *iocb, struct iov_iter *from)
 			size_t cp, tail = PAGE_SIZE - off;
 
 			page = pages[ip];
-			cp = copy_page_from_iter_atomic(page, off,
-							min(tail, bytes), from);
+			cp = iov_iter_copy_from_user_atomic(page, from, off,
+							    min(tail, bytes));
 			flush_dcache_page(page);
-
+			iov_iter_advance(from, cp);
 			copied += cp;
 			bytes -= cp;
 			if (!bytes || !cp)
